@@ -18,6 +18,7 @@ export interface Event {
   status?: 'pending' | 'approved' | 'rejected';
   referralCode?: string;
   teamConfig?: { isTeamEvent: boolean; minMembers: number; maxMembers: number };
+  communityLink?: { whatsapp?: string; telegram?: string; discord?: string };
   createdBy?: { _id: string; name: string; email: string; department: string } | string;
   createdAt: string;
   // legacy compat

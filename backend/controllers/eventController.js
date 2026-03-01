@@ -1,6 +1,7 @@
 import Event from "../models/Event.js";
 import Registration from "../models/Registration.js";
-import { notifyAdminOnEventCreation, sendRegistrationEmailToAdmin } from "../utils/emailService.js";
+import { notifyAdminOnEventCreation, sendRegistrationEmailToAdmin, sendRegistrationConfirmationToStudent } from "../utils/emailService.js";
+import User from "../models/User.js";
 import { autoAssignVipReward } from "./vipController.js";
 
 const TEAM_CONFIG = {
@@ -23,9 +24,17 @@ export const createEvent = async (req, res) => {
     const {
       title, description, category, department, venue,
       eventDate, registrationDeadline, registrationLink,
-      totalSlots, tags, communityLink,
+      totalSlots, tags,
+      whatsapp, telegram, discord,
       isTeamEvent, minMembers, maxMembers
     } = req.body;
+
+    // Build communityLink from separate fields OR from nested object
+    const communityLink = {
+      whatsapp: whatsapp || req.body['communityLink[whatsapp]'] || '',
+      telegram: telegram || req.body['communityLink[telegram]'] || '',
+      discord: discord || req.body['communityLink[discord]'] || '',
+    };
 
     const teamConfig = {
       isTeamEvent: isTeamEvent === 'true' || isTeamEvent === true,
@@ -167,19 +176,37 @@ export const registerForEvent = async (req, res) => {
       }
     }
 
+    // Fetch student details for the confirmation email
+    const student = await User.findById(req.user.userId).select('name email department').lean();
+
+    // Send confirmation email to student with community/join links
+    try {
+      await sendRegistrationConfirmationToStudent({
+        studentEmail: student?.email || req.user.email,
+        studentName: student?.name || req.user.email,
+        eventTitle: event.title,
+        eventDate: event.eventDate,
+        venue: event.venue,
+        communityLink: event.communityLink,
+      });
+    } catch (e) {
+      console.error('Student confirmation email error:', e.message);
+    }
+
+    // Notify admin
     try {
       await sendRegistrationEmailToAdmin({
         eventTitle: event.title,
-        studentName: req.user.name || req.user.email,
-        studentEmail: req.user.email,
-        department: req.user.department || 'N/A',
+        studentName: student?.name || req.user.email,
+        studentEmail: student?.email || req.user.email,
+        department: student?.department || 'N/A',
       });
     } catch (e) {
       console.error('Admin registration notify error:', e.message);
     }
 
     const count = await Registration.countDocuments({ event: req.params.id });
-    res.status(201).json({ success: true, message: "Registered successfully!", registrationCount: count });
+    res.status(201).json({ success: true, message: "Registered successfully!", registrationCount: count, communityLink: event.communityLink });
   } catch (error) {
     if (error.code === 11000) {
       return res.status(409).json({ success: false, message: "Already registered" });

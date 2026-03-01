@@ -82,7 +82,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         {/* Right: sidebar */}
         <div className="space-y-6">
           {/* Register CTA */}
-          <RegisterButton eventId={event._id} teamConfig={event.teamConfig} registrationDeadline={event.registrationDeadline} />
+          <RegisterButton eventId={event._id} teamConfig={event.teamConfig} registrationDeadline={event.registrationDeadline} communityLink={event.communityLink} />
 
           {/* One-tap community join */}
           <OneTapJoin label="Join Event Community" />

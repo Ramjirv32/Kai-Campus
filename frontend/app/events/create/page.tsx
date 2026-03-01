@@ -39,7 +39,9 @@ export default function CreateEventPage() {
     registrationLink: '',
     totalSlots: '',
     tags: '',
-    communityLink: '',
+    whatsapp: '',
+    telegram: '',
+    discord: '',
     isTeamEvent: 'false',
     minMembers: '1',
     maxMembers: '1',
@@ -330,16 +332,42 @@ export default function CreateEventPage() {
           />
         </div>
 
-        {/* Community Link */}
-        <div>
-          <label className={labelClass}>Community / WhatsApp Link</label>
-          <input
-            type="url"
-            className={inputClass}
-            placeholder="https://chat.whatsapp.com/..."
-            value={form.communityLink}
-            onChange={(e) => set('communityLink', e.target.value)}
-          />
+        {/* Community Links */}
+        <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+          <div>
+            <p className="text-sm font-semibold text-black mb-0.5">Community &amp; Joining Links</p>
+            <p className="text-xs text-gray-500 mb-3">Add links so registered participants can join your community groups.</p>
+          </div>
+          <div>
+            <label className={labelClass}>💬 WhatsApp Group Link</label>
+            <input
+              type="url"
+              className={inputClass}
+              placeholder="https://chat.whatsapp.com/..."
+              value={form.whatsapp}
+              onChange={(e) => set('whatsapp', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>✈️ Telegram Channel / Group Link</label>
+            <input
+              type="url"
+              className={inputClass}
+              placeholder="https://t.me/..."
+              value={form.telegram}
+              onChange={(e) => set('telegram', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>🎮 Discord Server Link</label>
+            <input
+              type="url"
+              className={inputClass}
+              placeholder="https://discord.gg/..."
+              value={form.discord}
+              onChange={(e) => set('discord', e.target.value)}
+            />
+          </div>
         </div>
 
         {/* Team Config */}

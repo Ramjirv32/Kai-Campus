@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
  */
 export const sendEmail = async (options) => {
   const mailOptions = {
-    from: 'Geniral KPRIET <geniral.kpriet@gmail.com>',
+    from: 'Kai Campus Hub <ramjib2311@gmail.com>',
     to: options.to,
     subject: options.subject,
     text: options.text,
@@ -131,6 +131,53 @@ export const notifyAdminOnEventCreation = async (adminEmail, eventData, studentE
   });
 };
 
+export const sendRegistrationConfirmationToStudent = async ({ studentEmail, studentName, eventTitle, eventDate, venue, communityLink }) => {
+  const hasLinks = communityLink && (communityLink.whatsapp || communityLink.telegram || communityLink.discord);
+  const linksHtml = hasLinks ? `
+    <div style="margin-top:20px;">
+      <p style="font-size:15px;font-weight:bold;color:#333;margin-bottom:12px;">Join the Event Community</p>
+      <p style="font-size:13px;color:#666;margin-bottom:14px;">Use these links to connect with other participants and get live updates:</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${communityLink.whatsapp ? `<a href="${communityLink.whatsapp}" style="display:inline-block;padding:11px 20px;background:#25D366;color:#fff;text-decoration:none;font-weight:bold;border-radius:8px;font-size:14px;text-align:center;">💬 Join WhatsApp Group</a>` : ''}
+        ${communityLink.telegram ? `<a href="${communityLink.telegram}" style="display:inline-block;padding:11px 20px;background:#2CA5E0;color:#fff;text-decoration:none;font-weight:bold;border-radius:8px;font-size:14px;text-align:center;">✈️ Join Telegram Channel</a>` : ''}
+        ${communityLink.discord ? `<a href="${communityLink.discord}" style="display:inline-block;padding:11px 20px;background:#5865F2;color:#fff;text-decoration:none;font-weight:bold;border-radius:8px;font-size:14px;text-align:center;">🎮 Join Discord Server</a>` : ''}
+      </div>
+    </div>
+  ` : `<p style="font-size:14px;color:#888;margin-top:16px;">Community links will be shared by the organizer soon.</p>`;
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:0;border-radius:12px;overflow:hidden;border:1px solid #e0e0e0;">
+      <div style="background:#000000;padding:28px 28px 20px;text-align:center;">
+        <p style="margin:0 0 6px;font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#aaa;">KaiCampus</p>
+        <h1 style="margin:0;font-size:24px;color:#ffffff;font-weight:900;">🎉 Registration Confirmed!</h1>
+        <p style="margin:10px 0 0;color:#ccc;font-size:13px;">You're in, ${studentName}.</p>
+      </div>
+      <div style="background:#fff;padding:28px;">
+        <p style="font-size:15px;color:#333;">Hi <strong>${studentName}</strong>,</p>
+        <p style="font-size:14px;color:#555;line-height:1.7;">You have successfully registered for <strong>${eventTitle}</strong>. Here are the event details:</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+          <tr><td style="padding:9px 12px;background:#f7f7f7;font-weight:bold;color:#333;border-radius:4px 0 0 4px;">Event</td><td style="padding:9px 12px;color:#555;">${eventTitle}</td></tr>
+          <tr><td style="padding:9px 12px;background:#f1f1f1;font-weight:bold;color:#333;">Date</td><td style="padding:9px 12px;color:#555;">${eventDate ? new Date(eventDate).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' }) : 'TBD'}</td></tr>
+          <tr><td style="padding:9px 12px;background:#f7f7f7;font-weight:bold;color:#333;">Venue</td><td style="padding:9px 12px;color:#555;">${venue || 'TBD'}</td></tr>
+          <tr><td style="padding:9px 12px;background:#f1f1f1;font-weight:bold;color:#333;">Your Email</td><td style="padding:9px 12px;color:#555;">${studentEmail}</td></tr>
+        </table>
+        ${linksHtml}
+        <p style="font-size:13px;color:#888;margin-top:24px;">Keep this email as your registration confirmation. See you at the event!</p>
+        <p style="font-size:14px;color:#333;margin-top:10px;">— <strong>Kai Campus Team</strong></p>
+      </div>
+      <div style="background:#f9f9f9;padding:14px;text-align:center;border-top:1px solid #eee;">
+        <p style="margin:0;font-size:11px;color:#aaa;">© 2026 KaiCampus · KPRIET</p>
+      </div>
+    </div>
+  `;
+  return sendEmail({
+    to: studentEmail,
+    subject: `✅ Registration Confirmed: ${eventTitle}`,
+    text: `Hi ${studentName}, you've successfully registered for "${eventTitle}" on ${eventDate ? new Date(eventDate).toLocaleString('en-IN') : 'TBD'} at ${venue || 'TBD'}.${hasLinks ? ` Join the community: WhatsApp: ${communityLink.whatsapp || ''} | Telegram: ${communityLink.telegram || ''} | Discord: ${communityLink.discord || ''}` : ''}`,
+    html,
+  });
+};
+
 export const sendRegistrationEmailToAdmin = async ({ eventTitle, studentName, studentEmail, department }) => {
   const adminEmail = process.env.ADMIN_EMAIL || 'ramjib2311@gmail.com';
   const html = `
@@ -223,6 +270,7 @@ export default {
   sendWelcomeOTPEmail,
   notifyAdminOnEventCreation,
   sendRegistrationEmailToAdmin,
+  sendRegistrationConfirmationToStudent,
   sendStudentCredentialsEmail,
   sendVipRewardEmail
 };

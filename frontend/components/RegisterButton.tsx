@@ -17,13 +17,20 @@ interface Member {
   department: string;
 }
 
+interface CommunityLink {
+  whatsapp?: string;
+  telegram?: string;
+  discord?: string;
+}
+
 interface Props {
   eventId: string;
   teamConfig?: TeamConfig;
   registrationDeadline?: string;
+  communityLink?: CommunityLink;
 }
 
-export default function RegisterButton({ eventId, teamConfig, registrationDeadline }: Props) {
+export default function RegisterButton({ eventId, teamConfig, registrationDeadline, communityLink: communityLinkProp }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const referralCode = searchParams.get('ref'); // Capture referral code from URL
@@ -44,6 +51,8 @@ export default function RegisterButton({ eventId, teamConfig, registrationDeadli
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [joinLinks, setJoinLinks] = useState<CommunityLink | undefined>(communityLinkProp);
+  const [userEmail, setUserEmail] = useState('');
 
   const emptyMember = (): Member => ({ name: '', email: '', rollNumber: '', department: '' });
 
@@ -61,6 +70,11 @@ export default function RegisterButton({ eventId, teamConfig, registrationDeadli
         if (token) {
           const check = await checkMyRegistration(eventId, token);
           setRegistered(check.registered);
+        }
+        // Pre-load user email from localStorage
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          try { setUserEmail(JSON.parse(stored).email || ''); } catch {}
         }
       } catch (e) { console.error(e); }
       finally { setInitializing(false); }
@@ -120,6 +134,7 @@ export default function RegisterButton({ eventId, teamConfig, registrationDeadli
       }
       const data = await registerForEvent(eventId, token, body);
       setCount(data.registrationCount);
+      if (data.communityLink) setJoinLinks(data.communityLink);
       setRegistered(true);
       setShowForm(false);
     } catch (err: unknown) {
@@ -151,6 +166,7 @@ export default function RegisterButton({ eventId, teamConfig, registrationDeadli
       }
       const data = await registerForEvent(eventId, token, body);
       setCount(data.registrationCount);
+      if (data.communityLink) setJoinLinks(data.communityLink);
       setRegistered(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Registration failed';
@@ -186,10 +202,58 @@ export default function RegisterButton({ eventId, teamConfig, registrationDeadli
   }
 
   if (registered) {
+    const links = joinLinks || communityLinkProp;
+    const hasLinks = links && (links.whatsapp || links.telegram || links.discord);
     return (
-      <div className="border border-black rounded-lg p-5">
-        <p className="font-bold text-black text-sm mb-1">✓ You&apos;re Registered!</p>
-        <p className="text-gray-500 text-xs">{count} student{count !== 1 ? 's' : ''} registered</p>
+      <div className="border border-black rounded-lg p-5 space-y-4">
+        <div>
+          <p className="font-bold text-black text-sm mb-1">✓ You&apos;re Registered!</p>
+          <p className="text-gray-500 text-xs">{count} student{count !== 1 ? 's' : ''} registered</p>
+          {userEmail && (
+            <p className="text-gray-400 text-xs mt-1">Confirmation sent to <span className="font-medium text-black">{userEmail}</span></p>
+          )}
+        </div>
+        {hasLinks && (
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-black uppercase tracking-widest">Join the Community</p>
+            {links!.whatsapp && (
+              <a
+                href={links!.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-sm font-bold text-white transition-colors"
+                style={{ backgroundColor: '#25D366' }}
+              >
+                <span>💬</span> Join WhatsApp Group
+              </a>
+            )}
+            {links!.telegram && (
+              <a
+                href={links!.telegram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-sm font-bold text-white transition-colors"
+                style={{ backgroundColor: '#2CA5E0' }}
+              >
+                <span>✈️</span> Join Telegram Channel
+              </a>
+            )}
+            {links!.discord && (
+              <a
+                href={links!.discord}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-sm font-bold text-white transition-colors"
+                style={{ backgroundColor: '#5865F2' }}
+              >
+                <span>🎮</span> Join Discord Server
+              </a>
+            )}
+          </div>
+        )}
+        {!hasLinks && (
+          <p className="text-xs text-gray-400">Community links will be shared by the organizer soon.</p>
+        )}
       </div>
     );
   }

@@ -77,6 +77,7 @@ const eventSchema = new mongoose.Schema({
   },
   communityLink: {
     whatsapp: String,
+    telegram: String,
     discord: String
   }
 }, {
