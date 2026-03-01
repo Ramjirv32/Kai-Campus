@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -52,12 +53,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                 {event.category?.replace(/_/g, ' ')}
               </span>
               {(event.registrationDeadline
-                  ? new Date(event.registrationDeadline) < new Date()
-                  : new Date(event.eventDate) < new Date()) && (
-                <span className="border border-gray-300 text-gray-600 text-xs font-semibold px-3 py-1">
-                  Closed
-                </span>
-              )}
+                ? new Date(event.registrationDeadline) < new Date()
+                : new Date(event.eventDate) < new Date()) && (
+                  <span className="border border-gray-300 text-gray-600 text-xs font-semibold px-3 py-1">
+                    Closed
+                  </span>
+                )}
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-black mb-4">{event.title}</h1>
             <div className="flex flex-wrap gap-4 text-gray-500 text-sm mb-6">
@@ -82,7 +83,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         {/* Right: sidebar */}
         <div className="space-y-6">
           {/* Register CTA */}
-          <RegisterButton eventId={event._id} teamConfig={event.teamConfig} registrationDeadline={event.registrationDeadline} communityLink={event.communityLink} />
+          <Suspense fallback={<div className="h-40 bg-gray-50 animate-pulse rounded-lg" />}>
+            <RegisterButton eventId={event._id} teamConfig={event.teamConfig} registrationDeadline={event.registrationDeadline} communityLink={event.communityLink} />
+          </Suspense>
 
           {/* One-tap community join */}
           <OneTapJoin label="Join Event Community" />
