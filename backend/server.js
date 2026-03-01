@@ -66,8 +66,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: "Something went wrong!" });
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Kai Campus Server running at http://localhost:${port}`);
-});
+// Only listen when running locally (not on Vercel serverless)
+if (process.env.VERCEL !== "1") {
+  app.listen(port, () => {
+    console.log(`🚀 Kai Campus Server running at http://localhost:${port}`);
+  });
+}
 
 export default app;
